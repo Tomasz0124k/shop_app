@@ -1,0 +1,117 @@
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: shop_app_ci
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.19.0'
+        cache: 'npm'
+    - run: npm run build-api
+    - run: npm run build-view
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Use Node.js 18.x
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+    - run:  cd api && npm ci
+    - run: npm test-api
+    
+  spectral:
+    runs-on: ubuntu-latest
+    #needs: [test]
+    env:
+      SPECTRAL_DSN: ${{ secrets.SPECTRAL_DSN }}
+    steps:
+    - uses: actions/checkout@v3
+    - name: Install and run Spectral CI
+      uses: spectralops/spectral-github-action@v3
+      with:
+        spectral-args: scan --ok --engines secrets,oss --include-tags base,audit
+        spectral-dsn: ${{ secrets.SPECTRAL_DSN }}
+
+  sonarqube:
+    runs-on: ubuntu-latest
+    needs: [spectral]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Run sonarscanner
+        run: npm install
+      - name: run sonarscanner
+        run: npm run sonar:jest
+      - uses: sonarsource/sonarqube-scan-action@master
+        env:
+          SONAR_TOKEN: ${{ secrets.SONARQUBE_KEY }}
+          SONAR_HOST_URL: http://localhost:9000
+        with:
+          args: >
+            -Dsonar.javascript.lcov.reportPaths=./coverage/lcov.info
+            -Dsonar.projectKey=shop
+            -Dsonar.verbose=true
+
+  build_run_app_docker:
+    runs-on: ubuntu-latest
+    needs: [spectral, sonarqube]
+    steps: 
+      - uses: actions/checkout@v3
+      - uses: KengoTODA/actions-setup-docker-compose@v1
+        with:
+          version: '2.14.2'
+      - name: dockerhub_login
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build docker image
+        run: bash docker/build_docker.sh
+      - name: Run app
+        run: docker compose -f docker/app.yml up -d
+      #   run: bash docker/run_containers.sh
+      # - name: Check app running
+      #   run: bash docker/check_app.sh
+  zap_scan:
+    runs-on: ubuntu-latest
+    needs: [build_run_app_docker]
+    steps:
+      - uses: actions/checkout@v3
+      - name: ZAP scan
+        uses: zaproxy/action-full-scan@v0.9.0
+        with:
+          target: "http://localhost:9000"
+          token: ${{ secrets.GITHUB_TOKEN }}
+  #push_docker_image:
+  #   name: Push Docker image to Docker Hub
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Check out the repo
+  #       uses: actions/checkout@v4
+  #     - name: Build and push Docker image
+  #       uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+  #       with:
+  #         context: .
+  #         file: ./Dockerfile
+  #         push: true
+  #         tags: ${{ steps.meta.outputs.tags }}
+  #         labels: ${{ steps.meta.outputs.labels }}
+
+

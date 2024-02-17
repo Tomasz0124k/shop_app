@@ -1,0 +1,30 @@
+{
+  "name": "shop",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test-api": "cd api && npm run test",
+    "start-api": "cd api && npm start && cd ..",
+    "start-view": "cd view && npm start && cd ..",
+    "start": "npm-run-all --parallel start-api start-view",
+    "build-api": "cd api && npm ci && npm run build",
+    "build-view": "cd view && npm ci --force && npm run build",
+    "build": "npm-run-all --parallel build-api build-view",
+    "sonar:jest": "jest --coverage --passWithNoTests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Arek1020/shop.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Arek1020/shop/issues"
+  },
+  "homepage": "https://github.com/Arek1020/shop#readme",
+  "dependencies": {
+    "npm-run-all": "^4.1.5",
+    "jest": "^29.7.0"
+  }
+}

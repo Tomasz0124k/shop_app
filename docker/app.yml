@@ -1,0 +1,38 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: postgres_db
+    image: tomasz0124/private-image-repo:postgres_shop_1.4.0
+    ports:
+      - 5432:5432
+    networks:
+      - main
+
+  api:
+    container_name: api
+    image: api:latest
+    ports: 
+      - 8000:8000
+    restart: always
+    depends_on:
+      - postgres
+    networks:
+      - main
+
+  view-frontend:
+    container_name: view-frontend
+    image: view_frontend:latest
+    ports: 
+      - 3000:3000
+    depends_on:
+      - api
+    networks:
+      - main
+
+networks:
+  main:
+    ipam:
+      driver: default
+      config:
+      - subnet: 192.168.1.0/24
