@@ -12,7 +12,7 @@ COPY . ./
 
 RUN npm run build
 
-EXPOSE 9000
+EXPOSE 3000
 
 # start app
 CMD ["node", "app"]
