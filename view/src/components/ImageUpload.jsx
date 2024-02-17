@@ -14,8 +14,6 @@ const Button = styled.button`
 `;
 
 export default function ImageUpload(props) {
-  const user = useAuthUser();
-  const userDetails = JSON.parse(localStorage.getItem('user') || '{}')
 
   const [images, setImages] = React.useState([]);
   const maxNumber = 1;
@@ -32,17 +30,6 @@ export default function ImageUpload(props) {
     // form.append('user', user().id);
     // const response = await useApi.sendFile('/user/avatar/upload', form)
 
-    const response = await fetch(SERVER_URL + '/product/photo/update', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': '/',
-        'Authorization': 'Bearer ' + localStorage.getItem('token')
-      },
-      body: JSON.stringify({
-        image: imageList[0].data_url
-      })
-    })
 
     //   axios({
     //     url: `${SERVER_URL}/user/avatar/upload`,
