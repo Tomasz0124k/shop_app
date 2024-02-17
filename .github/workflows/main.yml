@@ -33,7 +33,7 @@ jobs:
         node-version: '18.x'
         cache: 'npm'
     - run:  cd api && npm ci
-    - run: npm test-api
+    - run: npm run test-api
     
   spectral:
     runs-on: ubuntu-latest
