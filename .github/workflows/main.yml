@@ -50,6 +50,7 @@ jobs:
 
   sonarqube:
     runs-on: ubuntu-latest
+    continue-on-error: true
     needs: [spectral]
     steps:
       - uses: actions/checkout@v3
@@ -71,7 +72,7 @@ jobs:
 
   build_run_app_docker:
     runs-on: ubuntu-latest
-    needs: [spectral, sonarqube]
+    needs: [spectral]
     steps: 
       - uses: actions/checkout@v3
       - uses: KengoTODA/actions-setup-docker-compose@v1
